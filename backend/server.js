@@ -14,7 +14,9 @@ app.use(express.static(path.join(__dirname, "..", "frontend")));
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
-
+app.get("/", (req, res) => {
+  res.send("LM Payment Backend is LIVE 🚀");
+});
 // Login route
 app.post("/auth/login", (req, res) => {
   const { email } = req.body;
