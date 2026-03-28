@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>LM Payment Solutions</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #f4f6fb;
+      margin: 0;
+    }
+
+    .header {
+      background: #0f62fe;
+      color: white;
+      padding: 20px;
+      font-size: 28px;
+    }
+
+    .nav {
+      padding: 15px;
+      background: white;
+    }
+
+    .nav button {
+      padding: 10px 15px;
+      margin-right: 10px;
+      background: #0f62fe;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    input {
+      padding: 10px;
+      width: 300px;
+    }
+
+    .btn {
+      padding: 12px;
+      width: 300px;
+      background: #0f62fe;
+      color: white;
+      border: none;
+      margin-top: 10px;
+    }
+
+    pre {
+      background: black;
+      color: lime;
+      padding: 10px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="header">LM Payment Solutions</div>
+
+<div class="nav">
+  <button onclick="showHome()">Home</button>
+  <button onclick="showLogin()">Login</button>
+</div>
+
+<div class="container">
+
+  <div id="homeBox">
+    <h2>Server Check</h2>
+    <button class="btn" onclick="checkServer()">Check Server</button>
+    <pre id="serverOutput"></pre>
+
+<h2>Wallet</h2>
+<button class="btn" onclick="getWallet()">Check Wallet</button>
+<pre id="walletOutput"></pre>
+<h2>Send Money</h2>
+<input id="sendTo" placeholder="Recipient name or email">
+<br>
+<input id="sendAmount" type="number" placeholder="Amount">
+<br>
+<button class="btn" onclick="sendMoney()">Send Money</button>
+<pre id="sendOutput"></pre>
+ <h3>Transaction History</h3>
+ <button class="btn" onclick="clearHistory()">Clear History</button>
+<div id="historyOutput" style="background:black;color:#0f0;padding:10px;margin-top:10px;"></div>
+</div>
+
+  <div id="loginBox" style="display:none;">
+    <h2>Login</h2>
+    <input id="email" value="laurie@example.com">
+    <br>
+    <button class="btn" onclick="login()">Login</button>
+    <pre id="loginOutput"></pre>
+  </div>
+
+</div>
+
+<script>
+  let history = [];
+  let saved = localStorage.getItem("history");
+if (saved) {
+  history = JSON.parse(saved);
+  document.getElementById("historyOutput").innerText = history.join("\n");
+}
+function showHome() {
+  document.getElementById("homeBox").style.display = "block";
+  document.getElementById("loginBox").style.display = "none";
+}
+
+function showLogin() {
+  document.getElementById("homeBox").style.display = "none";
+  document.getElementById("loginBox").style.display = "block";
+}
+
+function checkServer() {
+  fetch("/health")
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("serverOutput").innerText =
+        JSON.stringify(data, null, 2);
+    });
+}
+
+function login() {
+  const email = document.getElementById("email").value;
+
+  fetch("/auth/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ email: email })
+  })
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById("loginOutput").innerText =
+      JSON.stringify(data, null, 2);
+  })
+  .catch(err => {
+    document.getElementById("loginOutput").innerText = err;
+  });
+}
+function getWallet() {
+  fetch("http://localhost:3000/wallet")
+    .then(res => res.json())
+    .then(data => {
+document.getElementById("walletOutput").innerText=
+JSON.stringify(data, null, 2);
+    })
+    .catch(err => {
+      document.getElementById("walletOutput").innerText =
+        "ERROR: " + err;
+    });
+}
+function sendMoney() {
+  const to = document.getElementById("sendTo").value;
+const amount = document.getElementById("sendAmount").value;
+if (!to || !amount || Number(amount) <= 0) {
+  document.getElementById("sendOutput").innerText =
+    "ERROR: Please enter valid recipient and amount";
+  return;
+}
+  fetch("http://localhost:3000/send", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      to: to,
+      amount: amount
+    })
+})
+.then(res => res.json())
+.then(data => {
+document.getElementById("sendOutput").innerText =
+  "Sent $" + data.amount + " to " + data.to + ". New balance: $" + data.newBalance;
+history.unshift("Sent $" + data.amount + " to " + data.to);
+localStorage.setItem("history", JSON.stringify(history));
+document.getElementById("historyOutput").innerText =
+  history.join("\n");
+document.getElementById("walletOutput").innerText =
+  "Balance: $" + data.newBalance.toLocaleString() + " USD";
+})
+    .catch(err => {
+      document.getElementById("sendOutput").innerText =
+        "ERROR: " + err;
+    });
+}
+function clearHistory() {
+  history = [];
+  document.getElementById("historyOutput").innerText = "";
+}
+</script>
+
+</body>
+</html>
