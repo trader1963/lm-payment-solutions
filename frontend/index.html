@@ -146,7 +146,7 @@ function login() {
   });
 }
 function getWallet() {
-  fetch("http://localhost:3000/wallet")
+  fetch("https://lm-payment-solutions-production.up.railway.app/wallet")
     .then(res => res.json())
     .then(data => {
 document.getElementById("walletOutput").innerText=
@@ -165,7 +165,7 @@ if (!to || !amount || Number(amount) <= 0) {
     "ERROR: Please enter valid recipient and amount";
   return;
 }
-  fetch("http://localhost:3000/send", {
+  fetch("https://lm-payment-solutions-production.up.railway.app/send", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
